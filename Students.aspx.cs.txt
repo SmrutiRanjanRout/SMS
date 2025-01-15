@@ -1,0 +1,421 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace SMS
+{
+    public partial class Students : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (clsCommon.IsValidSessionState() == 0)
+            {
+                //Response.Redirect("default.aspx", true);
+            }
+            if (!this.IsPostBack)
+            {
+                divAddEdit.Visible = false;
+                PopulateClass();
+                PopulateGender();
+                PopulateSection();
+                PopulateTitle();
+                PopulateStudentsData();
+            }
+        }
+
+        protected void dgCase_ItemCommand(object source, DataGridCommandEventArgs e)
+        {
+            string StudentsID = string.Empty;
+            string strSQL = string.Empty;
+            int ret = 0;
+            clsDataAccess objAccess = new clsDataAccess();
+
+            if (e.CommandName == "cmd_edit")
+            {
+                if (e.Item.FindControl("lblGridStudentsID") != null)
+                {
+                    StudentsID = ((Label)e.Item.FindControl("lblGridStudentsID")).Text;
+                    this.ViewState["StudentsID"] = StudentsID;
+                    PopulatePartDetail(StudentsID);
+
+                    this.btnAddStudents.Visible = false;
+                    this.btnSave.Visible = false;
+                    this.btnUpdate.Visible = false;
+                    this.btnEdit.Visible = true;
+                    this.btnBack.Visible = true;
+                    this.btnCancel.Visible = false;
+
+                    this.divView.Visible = false;
+                    this.pnlDataDetail.Visible = true;
+                    this.divAddEdit.Visible = true;
+
+                    this.lblMessage.Text = "";
+
+                    PopulateDivLock();
+                }
+            }
+        }
+        private void PopulateTitle()
+        {
+            string strSQL;
+            DataTable objdt;
+            clsDataAccess objAccess;
+            int ret;
+
+            strSQL = string.Empty;
+            objdt = new DataTable();
+            objAccess = new clsDataAccess();
+            ret = 0;
+
+            strSQL = "Select -1 as id, '<----Select Title---->' as Name union select id, [Name] from Title where isActive = 1 order by id";
+            ret = objAccess.GetDataTable(strSQL, ConfigurationManager.ConnectionStrings["strConn"].ConnectionString, ref objdt);
+            if (ret > 0)
+            {
+                if (objdt.Rows.Count > 0)
+                {
+                    this.ddlTitle.Items.Clear();
+                    this.ddlTitle.DataSource = objdt;
+                    this.ddlTitle.DataBind();
+
+                    this.ddlTitle.DataTextField = "Name";
+                    this.ddlTitle.DataValueField = "ID";
+                    this.ddlTitle.SelectedIndex = 0;
+                }
+            }
+        }
+        private void PopulateClass()
+        {
+            string strSQL;
+            DataTable objdt;
+            clsDataAccess objAccess;
+            int ret;
+
+            strSQL = string.Empty;
+            objdt = new DataTable();
+            objAccess = new clsDataAccess();
+            ret = 0;
+
+            strSQL = "Select -1 as id, '<----Select Class---->' as Name union select id, [Name] from Class order by id";
+            ret = objAccess.GetDataTable(strSQL, ConfigurationManager.ConnectionStrings["strConn"].ConnectionString, ref objdt);
+            if (ret > 0)
+            {
+                if (objdt.Rows.Count > 0)
+                {
+                    this.ddlClass.Items.Clear();
+                    this.ddlClass.DataSource = objdt;
+                    this.ddlClass.DataBind();
+
+                    this.ddlClass.DataTextField = "Name";
+                    this.ddlClass.DataValueField = "ID";
+                    this.ddlClass.SelectedIndex = 0;
+                }
+            }
+        }
+        private void PopulateSection()
+        {
+            string strSQL;
+            DataTable objdt;
+            clsDataAccess objAccess;
+            int ret;
+
+            strSQL = string.Empty;
+            objdt = new DataTable();
+            objAccess = new clsDataAccess();
+            ret = 0;
+
+            strSQL = "Select -1 as id, '<----Select Section---->' as Name union select id, [Name] from Section where isActive = 1 order by id";
+            ret = objAccess.GetDataTable(strSQL, ConfigurationManager.ConnectionStrings["strConn"].ConnectionString, ref objdt);
+            if (ret > 0)
+            {
+                if (objdt.Rows.Count > 0)
+                {
+                    this.ddlSection.Items.Clear();
+                    this.ddlSection.DataSource = objdt;
+                    this.ddlSection.DataBind();
+
+                    this.ddlSection.DataTextField = "Name";
+                    this.ddlSection.DataValueField = "ID";
+                    this.ddlSection.SelectedIndex = 0;
+                }
+            }
+        }
+        private void PopulateGender()
+        {
+            string strSQL;
+            DataTable objdt;
+            clsDataAccess objAccess;
+            int ret;
+
+            strSQL = string.Empty;
+            objdt = new DataTable();
+            objAccess = new clsDataAccess();
+            ret = 0;
+
+            strSQL = "Select -1 as id, '<----Select Gender---->' as Name union select id, [Name] from Gender where isActive = 1 order by id";
+            ret = objAccess.GetDataTable(strSQL, ConfigurationManager.ConnectionStrings["strConn"].ConnectionString, ref objdt);
+            if (ret > 0)
+            {
+                if (objdt.Rows.Count > 0)
+                {
+                    this.ddlGender.Items.Clear();
+                    this.ddlGender.DataSource = objdt;
+                    this.ddlGender.DataBind();
+
+                    this.ddlGender.DataTextField = "Name";
+                    this.ddlGender.DataValueField = "ID";
+                    this.ddlGender.SelectedIndex = 0;
+                }
+            }
+        }
+        private void PopulatePartDetail(string strSiteID)
+        {
+            //{
+            //    string strSQL;
+            //    DataTable objdt;
+            //    clsDataAccess objAccess;
+
+            //    strSQL = "";
+            //    objdt = new DataTable();
+            //    objAccess = new clsDataAccess();
+
+            //    strSQL = "select Name, Cast(isActive as Int) as isActive from Students Where ID = " + Convert.ToString(this.ViewState["StudentsID"]);
+            //    objAccess.GetDataTable(strSQL, ConfigurationManager.AppSettings["StrConn"].ToString(), ref objdt);
+            //    if (objdt.Rows.Count > 0)
+            //    {
+            //        this.txtname.Text = Convert.ToString(objdt.Rows[0]["Name"]);
+            //        this.rblActive.SelectedValue = Convert.ToString(objdt.Rows[0]["isActive"]);
+            //    }
+            //}
+        }
+
+        private void PopulateDivLock()
+        {
+            this.txtFirstName.Enabled = false;
+            this.txtSurname.Enabled = false;
+            this.ddlTitle.Enabled = false;
+            this.ddlClass.Enabled = false;
+            this.ddlGender.Enabled = false;
+            this.ddlSection.Enabled = false;
+            this.txtFatherName.Enabled=false;
+            this.txtMotherName.Enabled=false;
+            this.txtMobileNo.Enabled=false;
+            this.txtAddress.Enabled=false;
+            this.txtCity.Enabled=false;
+            this.txtPincode.Enabled=false;
+            this.txtState.Enabled=false;
+            this.rblActive.Enabled = false;
+        }
+
+        private void PopulateStudentsData()
+        {
+            string strSQL;
+            DataTable objdt;
+            clsDataAccess objAccess;
+            int ret;
+
+            ret = 0;
+            strSQL = string.Empty;
+            objdt = new DataTable();
+            objAccess = new clsDataAccess();
+
+            strSQL = "select t1.id, t2.name + ' ' + t1.FirstName + ' ' + t1.SurName as Name,"; 
+            strSQL += " t3.name as Class, t4.name as Section, t5.Name as Gender,";
+            strSQL += " case t1.isActive when 1 then 'Active' else 'InActive' end as IsActive";
+            strSQL += " from Students as t1";
+            strSQL += " left outer join Title as t2 on t1.TitleId = t2.Id";
+            strSQL += " left outer join class as t3 on t1.ClassId = t3.Id";
+            strSQL += " left outer join Section as t4 on t1.SectionId = t4.Id";
+            strSQL += " left outer join Gender as t5 on t1.GenderId = t5.Id";
+            strSQL += " order by Class, Section, [Name]";
+            ret = objAccess.GetDataTable(strSQL, ConfigurationManager.AppSettings["StrConn"].ToString(), ref objdt);
+            if (ret > 0)
+            {
+                if (objdt.Rows.Count > 0)
+                {
+                    this.dgCase.DataSource = null;
+                    this.dgCase.DataBind();
+
+                    this.dgCase.DataSource = objdt;
+                    this.dgCase.DataBind();
+                }
+            }
+        }
+
+        protected void btnAddStudents_Click(object sender, EventArgs e)
+        {
+            //this.lblMessage.Text = "";
+            //PopulateClear();
+
+            //this.txtname.Enabled = true;
+            //this.rblActive.Enabled = true;
+
+            //this.divView.Visible = false;
+            //this.pnlDataDetail.Visible = true;
+            //this.divAddEdit.Visible = true;
+
+            //this.btnAddStudents.Visible = false;
+            //this.btnSave.Visible = true;
+            //this.btnUpdate.Visible = false;
+            //this.btnEdit.Visible = false;
+            //this.btnBack.Visible = true;
+            //this.btnCancel.Visible = false;
+
+            //this.ViewState["StudentsID"] = null;
+        }
+        protected void btnEdit_Click(object sender, EventArgs e)
+        {
+
+            //this.divView.Visible = false;
+            //this.pnlDataDetail.Visible = true;
+            //this.divAddEdit.Visible = true;
+
+            //this.lblMessage.Text = "";
+
+            //this.txtname.Enabled = true;
+            //this.rblActive.Enabled = true;
+
+            //this.btnAddStudents.Visible = false;
+            //this.btnSave.Visible = false;
+            //this.btnUpdate.Visible = true;
+            //this.btnEdit.Visible = false;
+            //this.btnBack.Visible = false;
+            //this.btnCancel.Visible = true;
+
+        }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            //if (txtname.Text != "")
+            //{
+            //    int ret = 0;
+            //    string strSQL = string.Empty;
+            //    clsDataAccess objAccess = new clsDataAccess();
+
+            //    strSQL = "Insert into Students (Name, isActive)Values('" + txtname.Text.Trim() + "', " + Convert.ToInt32(rblActive.SelectedValue) + ")";
+            //    ret = objAccess.ExecuteNonQuery(strSQL, ConfigurationManager.AppSettings["StrConn"].ToString());
+            //    if (ret > 0)
+            //    {
+            //        this.ViewState["StudentsID"] = null;
+            //        this.btnBack_Click(this, null);
+            //        this.lblMessage.Text = "Record Successfully Inserted";
+            //        this.lblMessage.ForeColor = System.Drawing.Color.FromArgb(51, 153, 102);
+            //    }
+            //    else
+            //    {
+            //        this.lblMessage.Text = "Enter Students";
+            //        this.lblMessage.ForeColor = System.Drawing.Color.FromArgb(255, 0, 0);
+            //    }
+            //}
+        }
+
+        protected void btnUpdate_Click(object sender, EventArgs e)
+        {
+            //clsDataAccess objAccess = new clsDataAccess();
+            //if (txtname.Text != "")
+            //{
+            //    int success = 0;
+            //    string StudentsID = string.Empty;
+
+            //    StudentsID = this.ViewState["StudentsID"].ToString();
+
+            //    string strSQL = string.Empty;
+
+            //    int isActive = Convert.ToInt32(rblActive.SelectedValue);
+
+            //    strSQL = "update Students set Name = '" + txtname.Text + "', isActive = " + isActive + " where id = " + StudentsID;
+            //    success = objAccess.ExecuteNonQuery(strSQL, ConfigurationManager.AppSettings["StrConn"].ToString());
+            //    if (success > 0)
+            //    {
+            //        PopulatePartDetail(StudentsID);
+
+            //        this.btnCancel_Click(this, null);
+
+            //        this.lblMessage.Text = "Record Successfully Updated";
+            //        this.lblMessage.ForeColor = System.Drawing.Color.FromArgb(51, 153, 102);
+            //    }
+            //    else
+            //    {
+            //        this.lblMessage.Text = "Sorry, Unable To Update Record";
+            //        this.lblMessage.ForeColor = System.Drawing.Color.FromArgb(255, 0, 0);
+            //    }
+            //}
+            //else
+            //{
+            //    this.lblMessage.Text = "Enter Students Name";
+            //    this.lblMessage.ForeColor = System.Drawing.Color.FromArgb(255, 0, 0);
+            //}
+        }
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            //this.txtname.Enabled = true;
+            //this.rblActive.Enabled = true;
+
+            //this.divView.Visible = true;
+            //this.pnlDataDetail.Visible = false;
+            //this.divAddEdit.Visible = false;
+
+            //this.lblMessage.Text = "";
+
+            //this.btnAddStudents.Visible = true;
+            //this.btnSave.Visible = false;
+            //this.btnUpdate.Visible = false;
+            //this.btnEdit.Visible = false;
+            //this.btnBack.Visible = false;
+            //this.btnCancel.Visible = false;
+
+            //PopulateStudentsData();
+
+            //this.ViewState["StudentsID"] = null;
+        }
+        protected void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.divView.Visible = false;
+            this.pnlDataDetail.Visible = true;
+            this.divAddEdit.Visible = true;
+
+            string StudentsID;
+            StudentsID = this.ViewState["StudentsID"].ToString();
+            this.lblMessage.Text = "";
+            this.btnAddStudents.Visible = false;
+            this.btnSave.Visible = false;
+            this.btnUpdate.Visible = false;
+            this.btnEdit.Visible = true;
+            this.btnBack.Visible = true;
+            this.btnCancel.Visible = false;
+            PopulatePartDetail(StudentsID);
+            PopulateDivLock();
+        }
+
+        private void PopulateClear()
+        {
+            this.txtFirstName.Text = "";
+            this.txtSurname.Text = "";
+            this.ddlTitle.SelectedValue = "-1";
+            this.ddlClass.SelectedValue = "-1";
+            this.ddlGender.SelectedValue = "-1";
+            this.ddlSection.SelectedValue = "-1";
+            this.txtFatherName.Text = "";
+            this.txtMotherName.Text = "";
+            this.txtMobileNo.Text = "";
+            this.txtAddress.Text = "";
+            this.txtCity.Text = "";
+            this.txtPincode.Text = "";
+            this.txtState.Text = "";
+            this.rblActive.SelectedValue = "1";
+        }
+
+        protected void dgCase_PageIndexChanged(object source, DataGridPageChangedEventArgs e)
+        {
+            this.lblMessage.Text = "";
+            PopulateStudentsData();
+            dgCase.CurrentPageIndex = e.NewPageIndex;
+            dgCase.DataBind();
+        }
+    }
+}
